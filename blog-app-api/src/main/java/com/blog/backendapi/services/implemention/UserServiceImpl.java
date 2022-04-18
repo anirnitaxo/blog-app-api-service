@@ -1,14 +1,19 @@
 package com.blog.backendapi.services.implemention;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.blog.backendapi.exceptions.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.blog.backendapi.model.User;
 import com.blog.backendapi.payloads.UserDto;
 import com.blog.backendapi.repo.UserRepo;
 import com.blog.backendapi.services.UserService;
 
+@Service
 public class UserServiceImpl implements UserService {
 	
 	@Autowired
@@ -25,27 +30,44 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public UserDto updateUser(UserDto user, Integer userId) {
-		// TODO Auto-generated method stub
-		return null;
+	public UserDto updateUser(UserDto userDto, Integer userId) {
+		
+		User user=this.userRepo.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", " id ", userId));
+		
+		user.setName(userDto.getName());
+		user.setEmail(userDto.getEmail());
+		user.setPassword(userDto.getPassword());
+		user.setAbout(userDto.getAbout());
+		
+		User updatedUser = this.userRepo.save(user);
+		UserDto  userDto1 = this.usertoDto(updatedUser);
+		
+		return userDto1;
 	}
 
 	@Override
 	public UserDto getUserByid(Integer userId) {
-		// TODO Auto-generated method stub
-		return null;
+
+
+		User user=this.userRepo.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", " id ", userId));
+		
+		return this.usertoDto(user);
 	}
 
 	@Override
 	public List<UserDto> getAllUsers() {
-		// TODO Auto-generated method stub
+		List<User> users = this.userRepo.findAll();
+		
+		List<UserDto> usersDtos = users.stream().map(user -> this.usertoDto(user)).collect(Collectors.toList());
 		return null;
 	}
 
 	@Override
 	public void deleteUser(Integer userId) {
-		// TODO Auto-generated method stub
-
+		
+		User user = this.userRepo.findById(userId).orElseThrow(()->new ResourceNotFoundException("User", " id ", userId));
+		
+		this.userRepo.delete(user);
 	}
 	
 	private User dtoToUser(UserDto userDto) {
